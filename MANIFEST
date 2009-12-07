@@ -1,0 +1,14 @@
+Build.PL
+MANIFEST
+MANIFEST.SKIP
+README
+lib/POE/Component/SmokeBox/Uploads/Rsync.pm
+Makefile.PL
+META.yml
+Changes
+LICENSE
+
+examples/rsync.pl
+
+t/1_load.t
+t/apocalypse.t
