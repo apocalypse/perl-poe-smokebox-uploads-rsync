@@ -6,6 +6,14 @@ use strict; use warnings;
 use vars qw( $VERSION );
 $VERSION = '0.01';
 
+# Import what we need from the POE namespace
+use POE;
+use POE::Component::Generic;
+use base 'POE::Session::AttributeBased';
+
+# The rsync stuff we will use
+#use File::Rsync;	# only loaded in the poco-generic subprocess
+
 1;
 __END__
 
@@ -21,13 +29,19 @@ POE::Component::SmokeBox::Uploads::Rsync - Obtain uploaded CPAN modules via rsyn
 =head1 ABSTRACT
 
 POE::Component::SmokeBox::Uploads::Rsync is a POE component that alerts newly uploaded CPAN distributions. It obtains this information by
-running rsync against a rsync server. This effectively keeps your local CPAN mirror up-to-date too!
+running rsync against a CPAN mirror. This effectively keeps your local CPAN mirror up-to-date too!
 
 =head1 DESCRIPTION
 
-=head1 SEE ALSO
+=head1 EXPORT
 
 None.
+
+=head1 SEE ALSO
+
+L<POE::Component::SmokeBox>
+
+L<File::Rsync>
 
 =head1 SUPPORT
 
