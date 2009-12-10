@@ -27,11 +27,9 @@ my $build = Module::Build->new(
 		'POE::Session::AttributeBased'	=> 0,
 		'POE::Component::Generic'	=> 0,
 
-		# FIXME POE stuff that Test::Dependencies needs to see
-		'POE::Session'			=> 0,
-
 		# The actual rsync stuff
 		'File::Rsync'			=> 0,
+		'File::Spec'			=> 0,
 
 		# we need a recent perl
 		'perl'				=> '5.008',
