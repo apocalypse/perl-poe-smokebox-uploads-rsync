@@ -576,6 +576,10 @@ You can find documentation for this module with the perldoc command.
 
 =over 4
 
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
+
 =item * AnnoCPAN: Annotated CPAN documentation
 
 L<http://annocpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
@@ -584,17 +588,21 @@ L<http://annocpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
 
 L<http://cpanratings.perl.org/d/POE-Component-SmokeBox-Uploads-Rsync>
 
-=item * RT: CPAN's request tracker
+=item * RT: CPAN's Request Tracker
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=POE-Component-SmokeBox-Uploads-Rsync>
 
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * CPAN Testing Service
+=item * CPANTS Kwalitee
 
 L<http://cpants.perl.org/dist/overview/POE-Component-SmokeBox-Uploads-Rsync>
+
+=item * CPAN Testers Results
+
+L<http://cpantesters.org/distro/P/POE-Component-SmokeBox-Uploads-Rsync.html>
+
+=item * CPAN Testers Matrix
+
+L<http://matrix.cpantesters.org/?dist=POE-Component-SmokeBox-Uploads-Rsync>
 
 =back
 
