@@ -1,5 +1,9 @@
 Revision history for Perl extension POE::Component::SmokeBox::Uploads::Rsync
 
+* 0.02
+
+	Minor fixes for CPANTesters/Kwalitee purposes
+
 * 0.01
 
 	initial release

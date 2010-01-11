@@ -4,7 +4,7 @@ use strict; use warnings;
 
 # Initialize our version
 use vars qw( $VERSION );
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 # Import what we need from the POE namespace
 use POE;
@@ -351,7 +351,7 @@ sub rsync_out_result : State {
 sub generic_error : State {
 	my $err = $_[ARG0];
 
-	if( $err->{stderr} ) {
+	if( $err->{stderr} ) {	## no critic ( ProhibitAccessOfPrivateData )
 		# $err->{stderr} is a line that was printed to the
 		# sub-processes' STDERR.  99% of the time that means from
 		# your code.
@@ -404,7 +404,7 @@ sub shutdown : State {
 1;
 __END__
 
-=for stopwords POE AnnoCPAN CPAN RT ARG admin crontabbed dists rsyncdone BinGOs FRMRecent
+=for stopwords POE AnnoCPAN CPAN RT arg admin crontabbed dists rsyncdone BinGOs frmrecent
 
 =head1 NAME
 
@@ -455,6 +455,8 @@ Really, all you have to do is load the module and call it's spawn() method:
 	POE::Component::SmokeBox::Uploads::Rsync->spawn( ... );
 
 This method will return failure on errors or return success. Normally you just need to set the rsync server. ( rsync_src )
+
+=head2 spawn()
 
 This constructor accepts either a hashref or a hash, valid options are:
 
@@ -541,7 +543,7 @@ The default is: undef ( not enabled )
 
 There is only one command you can use, as this is a very simple module.
 
-=head3 shutdown
+=head3 shutdown()
 
 Tells this module to shut down the underlying rsync session and terminate itself.
 
@@ -610,7 +612,7 @@ Thanks to BinGOs for writing the excellent L<POE::Component::SmokeBox> module!
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2009 by Apocalypse
+Copyright 2010 by Apocalypse
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
