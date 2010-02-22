@@ -4,7 +4,7 @@ use strict; use warnings;
 
 # Initialize our version
 use vars qw( $VERSION );
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 # Import what we need from the POE namespace
 use POE;
@@ -49,7 +49,7 @@ sub spawn {
 		}
 		return 0;
 	} else {
-		# TODO verify it's a valid rsync path
+		# should we verify it's a valid rsync path?
 		# i.e. 'cpan.cpantesters.org::cpan'
 	}
 
@@ -130,7 +130,11 @@ sub spawn {
 		# set the default
 		$opt{'interval'} = 3600;
 	} else {
-		# TODO verify it's a valid numeric amount
+		# verify it's a valid numeric amount
+		if ( $opt{'interval'} !~ /^\d+$/ or $opt{'interval'} < 1 ) {
+			warn "The INTERVAL argument is not a valid number!";
+			return 0;
+		}
 	}
 
 	# Setup the event
@@ -404,7 +408,7 @@ sub shutdown : State {
 1;
 __END__
 
-=for stopwords POE AnnoCPAN CPAN RT arg admin crontabbed dists rsyncdone BinGOs frmrecent
+=for stopwords POE AnnoCPAN CPAN RT ARG admin crontabbed dists rsyncdone BinGOs FRMRecent Kwalitee
 
 =head1 NAME
 
@@ -588,6 +592,10 @@ L<http://annocpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
 
 L<http://cpanratings.perl.org/d/POE-Component-SmokeBox-Uploads-Rsync>
 
+=item * CPAN Forum
+
+L<http://cpanforum.com/dist/POE-Component-SmokeBox-Uploads-Rsync>
+
 =item * RT: CPAN's Request Tracker
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=POE-Component-SmokeBox-Uploads-Rsync>
@@ -603,6 +611,10 @@ L<http://cpantesters.org/distro/P/POE-Component-SmokeBox-Uploads-Rsync.html>
 =item * CPAN Testers Matrix
 
 L<http://matrix.cpantesters.org/?dist=POE-Component-SmokeBox-Uploads-Rsync>
+
+=item * Git Source Code Repository
+
+L<http://github.com/apocalypse/perl-poe-smokebox-uploads-rsync>
 
 =back
 

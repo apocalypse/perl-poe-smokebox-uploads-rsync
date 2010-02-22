@@ -24,7 +24,7 @@ my $build = Module::Build->new(
 	'requires'		=> {
 		# POE Stuff
 		'POE'				=> 0,
-		'POE::Session::AttributeBased'	=> 0,
+		'POE::Session::AttributeBased'	=> '0.09',
 		'POE::Component::Generic'	=> 0,
 
 		# The actual rsync stuff

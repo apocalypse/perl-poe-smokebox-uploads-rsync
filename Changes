@@ -1,5 +1,10 @@
 Revision history for Perl extension POE::Component::SmokeBox::Uploads::Rsync
 
+* 0.03
+
+	Minor POD tweaks
+	Bumped POE::Session::AttributeBased prereq, thanks CPANTesters!
+
 * 0.02
 
 	Minor fixes for CPANTesters/Kwalitee purposes
