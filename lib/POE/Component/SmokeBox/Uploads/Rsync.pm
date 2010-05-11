@@ -4,7 +4,7 @@ use strict; use warnings;
 
 # Initialize our version
 use vars qw( $VERSION );
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 # Import what we need from the POE namespace
 use POE;
@@ -97,7 +97,8 @@ sub spawn {
 		# skip some files that always fails to sync, and is not needed...
 		# rsync: send_files failed to open "/modules/.FRMRecent-RECENT-1h.yaml-zr8t.yaml" (in cpan): Permission denied (13)
 		# rsync: send_files failed to open "/authors/.FRMRecent-RECENT.recent-qtlN.recent" (in cpan): Permission denied (13)
-		'exclude'		=> [ '/indices/', '/misc/', '/src/', '/scripts/', '/modules/.FRMRecent-*', '/authors/.FRMRecent-*', ],
+		# TODO wtf, "mirror" was added recently? I really need to get include to work...
+		'exclude'		=> [ '/indices/', '/misc/', '/src/', '/scripts/', '/modules/.FRMRecent-*', '/authors/.FRMRecent-*', '/mirror/', ],
 
 		# skip the motd, which just consumes bandwidth ;)
 		'literal'		=> [ '--no-motd', ],
