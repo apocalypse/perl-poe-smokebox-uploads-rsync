@@ -97,8 +97,7 @@ sub spawn {
 		# skip some files that always fails to sync, and is not needed...
 		# rsync: send_files failed to open "/modules/.FRMRecent-RECENT-1h.yaml-zr8t.yaml" (in cpan): Permission denied (13)
 		# rsync: send_files failed to open "/authors/.FRMRecent-RECENT.recent-qtlN.recent" (in cpan): Permission denied (13)
-		# TODO wtf, "mirror" was added recently? I really need to get include to work...
-		'exclude'		=> [ '/indices/', '/misc/', '/src/', '/scripts/', '/modules/.FRMRecent-*', '/authors/.FRMRecent-*', '/mirror/', ],
+		'exclude'		=> [ '/indices/', '/misc/', '/src/', '/scripts/', '/modules/.FRMRecent-*', '/authors/.FRMRecent-*', ],
 
 		# skip the motd, which just consumes bandwidth ;)
 		'literal'		=> [ '--no-motd', ],

@@ -1,9 +1,5 @@
 Revision history for Perl extension POE::Component::SmokeBox::Uploads::Rsync
 
-* 0.04
-
-	Added /mirror/ to exclude list
-
 * 0.03
 
 	Minor POD tweaks
