@@ -224,16 +224,16 @@ sub _start : State {
 		'object_options'	=> [ %{ $_[HEAP]->{'RSYNC_OPT'} } ],
 		'alias'			=> $_[HEAP]->{'ALIAS'} . '-' . 'Generic',
 
-		( DEBUG ? ( 'debug' => 1, 'error' => 'generic_error' ) : () ),
+		( DEBUG ? ( 'debug' => 1, 'error' => '_rsync_generic_error' ) : () ),
 	);
 
 	# Do the first rsync!
-	$_[KERNEL]->yield( 'do_rsync' );
+	$_[KERNEL]->yield( '_rsync_start' );
 
 	return;
 }
 
-sub do_rsync : State {
+sub _rsync_start : State {
 	if ( DEBUG ) {
 		warn 'Starting rsync run...';
 	}
@@ -241,12 +241,12 @@ sub do_rsync : State {
 	$_[HEAP]->{'STARTTIME'} = time;
 
 	# tell poco-generic to do it!
-	$_[HEAP]->{'RSYNC'}->exec( { 'event' => 'rsync_exec_result' } );
+	$_[HEAP]->{'RSYNC'}->exec( { 'event' => '_rsync_exec_result' } );
 
 	return;
 }
 
-sub rsync_exec_result : State {
+sub _rsync_exec_result : State {
 	my( $ref, $result ) = @_[ARG0, ARG1];
 
 	if ( DEBUG ) {
@@ -256,16 +256,16 @@ sub rsync_exec_result : State {
 	# Was it successful?
 	if ( $result ) {
 		# Get the stdout listing so we can parse it for uploaded files
-		$_[HEAP]->{'RSYNC'}->out( { 'event' => 'rsync_out_result' } );
+		$_[HEAP]->{'RSYNC'}->out( { 'event' => '_rsync_out_result' } );
 	} else {
 		# Get the exit code
-		$_[HEAP]->{'RSYNC'}->status( { 'event' => 'rsync_status_result' } );
+		$_[HEAP]->{'RSYNC'}->status( { 'event' => '_rsync_status_result' } );
 	}
 
 	return;
 }
 
-sub rsync_status_result : State {
+sub _rsync_status_result : State {
 	my( $ref, $result ) = @_[ARG0, ARG1];
 
 	# We ignore status 23/24 errors, it happens occassionally...
@@ -275,11 +275,11 @@ sub rsync_status_result : State {
 		}
 
 		# Get the stdout listing so we can parse it for uploaded files
-		$_[HEAP]->{'RSYNC'}->out( { 'event' => 'rsync_out_result' } );
+		$_[HEAP]->{'RSYNC'}->out( { 'event' => '_rsync_out_result' } );
 	} else {
 		if ( DEBUG ) {
 			warn "Rsync exec error - status: $result";
-			$_[HEAP]->{'RSYNC'}->err( { 'event' => 'rsync_err_result' } );
+			$_[HEAP]->{'RSYNC'}->err( { 'event' => '_rsync_err_result' } );
 		}
 
 		# Let the session know the run is done
@@ -294,13 +294,13 @@ sub rsync_status_result : State {
 		}
 
 		# Do another run in INTERVAL
-		$_[KERNEL]->delay_set( 'do_rsync' => $_[HEAP]->{'INTERVAL'} );
+		$_[KERNEL]->delay_set( '_rsync_start' => $_[HEAP]->{'INTERVAL'} );
 	}
 
 	return;
 }
 
-sub rsync_err_result : State {
+sub _rsync_err_result : State {
 	my( $ref, $result ) = @_[ARG0, ARG1];
 
 	require Data::Dumper;
@@ -309,7 +309,7 @@ sub rsync_err_result : State {
 	return;
 }
 
-sub rsync_out_result : State {
+sub _rsync_out_result : State {
 	my( $ref, $result ) = @_[ARG0, ARG1];
 
 	# Parse the result, and inform the session of new uploads!
@@ -348,12 +348,12 @@ sub rsync_out_result : State {
 	}
 
 	# Do another run in INTERVAL
-	$_[KERNEL]->delay_set( 'do_rsync' => $_[HEAP]->{'INTERVAL'} );
+	$_[KERNEL]->delay_set( '_rsync_start' => $_[HEAP]->{'INTERVAL'} );
 
 	return;
 }
 
-sub generic_error : State {
+sub _rsync_generic_error : State {
 	my $err = $_[ARG0];
 
 	if( $err->{stderr} ) {	## no critic ( ProhibitAccessOfPrivateData )
@@ -412,6 +412,8 @@ sub shutdown : State {
 
 =for stopwords ARG admin crontabbed dists rsyncdone BinGOs FRMRecent
 
+=for Pod::Coverage DEBUG
+
 =head1 SYNOPSIS
 
 	#!/usr/bin/perl
@@ -444,12 +446,10 @@ sub shutdown : State {
 
 	POE::Kernel->run;
 
-=head1 ABSTRACT
+=head1 DESCRIPTION
 
 POE::Component::SmokeBox::Uploads::Rsync is a POE component that alerts newly uploaded CPAN distributions. It obtains this information by
 running rsync against a CPAN mirror. This effectively keeps your local CPAN mirror up-to-date too!
-
-=head1 DESCRIPTION
 
 Really, all you have to do is load the module and call it's spawn() method:
 
