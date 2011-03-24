@@ -5,7 +5,7 @@ package POE::Component::SmokeBox::Uploads::Rsync;
 # Import what we need from the POE namespace
 use POE;
 use POE::Component::Generic;
-use parent 'POE::Session::AttributeBased';
+use parent 'POE::Session::AttributeBased'; # TODO do we really need to prereq 0.09?
 
 # The misc stuff we will use
 use File::Spec;

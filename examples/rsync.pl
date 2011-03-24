@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-use strict; use warnings;
 
 #sub POE::Component::SmokeBox::Uploads::Rsync::DEBUG () { 1 }
 
