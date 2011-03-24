@@ -73,7 +73,7 @@ sub spawn {
 	# setup the RSYNC opts
 	if ( ! exists $opt{'rsync'} or ! defined $opt{'rsync'} ) {
 		if ( DEBUG ) {
-			warn 'Using default RSYNC = { archive=>1, compress=>1, omit-dir-times=>1, itemize-changes=>1, exclude=[ /indices/, /misc/, /src/, /scripts/, /modules/.FRMRecent-*, /authors/.FRMRecent-* ], literal=[ --no-motd ] }';
+			warn 'Using default RSYNC = { archive=>1, compress=>1, omit-dir-times=>1, itemize-changes=>1, exclude=[ /indices/, /misc/, /src/, /scripts/, /modules/.FRMRecent-*, /authors/.FRMRecent-* ], literal=[ --no-motd ], timeout=>1800 }';
 		}
 
 		# Set the default
@@ -91,6 +91,7 @@ sub spawn {
 		'archive'		=> 1,
 		'compress'		=> 1,
 		'itemize-changes'	=> 1,
+		'timeout'		=> 1800,
 #		'include'		=> [ '/authors/', '/modules/' ],	# doesn't do what I expect...
 
 		# skip the unimportant directories
@@ -275,7 +276,6 @@ sub rsync_status_result : State {
 		# Get the stdout listing so we can parse it for uploaded files
 		$_[HEAP]->{'RSYNC'}->out( { 'event' => 'rsync_out_result' } );
 	} else {
-
 		if ( DEBUG ) {
 			warn "Rsync exec error - status: $result";
 			$_[HEAP]->{'RSYNC'}->err( { 'event' => 'rsync_err_result' } );
@@ -473,7 +473,7 @@ The default is: SmokeBox-Rsync
 =head3 rsync_src
 
 This sets the rsync source ( the server you will be mirroring from ) and it is a mandatory parameter. For a list of valid rsync mirrors, please
-consult the L<http://www.cpan.org/SITES.html#RSYNC> mirror list.
+consult the L<http://www.cpan.org/SITES.html> mirror list.
 
 The default is: undefined
 
@@ -491,12 +491,13 @@ look at the L<File::Rsync> manpage for the options. Again, touch this if you kno
 The default is:
 
 	{
-		archive=>1,
-		compress=>1,
-		omit-dir-times=>1,
-		itemize-changes=>1,
-		exclude=[ /indices/, /misc/, /src/, /scripts/, /modules/.FRMRecent-*, /authors/.FRMRecent-* ],
-		literal=[ --no-motd ]
+		archive 	=> 1,
+		compress 	=> 1,
+		omit-dir-times	=> 1,
+		itemize-changes	=> 1,
+		exclude 	=> [ qw( /indices/ /misc/ /src/ /scripts/ /modules/.FRMRecent-* /authors/.FRMRecent-* ) ],
+		literal 	=> [ qw( --no-motd ) ],
+		timeout		=> 1800
 	}
 
 NOTE: By default we only mirror the /authors/ and /modules/ subdirectories of CPAN. If you want to keep your mirror up-to-date with regards to the other paths,
@@ -508,7 +509,7 @@ NOTE: The usage of "omit-dir-times/itemize-changes" means you need a rsync newer
 
 This sets the seconds between rsync mirror executions. Please don't set it to a low value unless you have permission from the mirror admin!
 
-The default is: 3600
+The default is: 3600 ( 1 hour )
 
 =head3 event
 
