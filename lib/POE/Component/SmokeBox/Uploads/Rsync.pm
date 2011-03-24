@@ -1,18 +1,19 @@
-# Declare our package
 package POE::Component::SmokeBox::Uploads::Rsync;
-use strict; use warnings;
 
-# Initialize our version
-use vars qw( $VERSION );
-$VERSION = '0.04';
+# ABSTRACT: Obtain uploaded CPAN modules via rsync
 
 # Import what we need from the POE namespace
 use POE;
 use POE::Component::Generic;
-use base 'POE::Session::AttributeBased';
+use parent 'POE::Session::AttributeBased';
 
 # The misc stuff we will use
 use File::Spec;
+
+# Work-around for dzil ( I'm too lazy to add it to dist.ini :)
+if ( 0 ) {
+	require File::Rsync;
+}
 
 # Set some constants
 BEGIN {
@@ -406,13 +407,10 @@ sub shutdown : State {
 }
 
 1;
-__END__
 
-=for stopwords POE AnnoCPAN CPAN RT ARG admin crontabbed dists rsyncdone BinGOs FRMRecent Kwalitee
+=pod
 
-=head1 NAME
-
-POE::Component::SmokeBox::Uploads::Rsync - Obtain uploaded CPAN modules via rsync
+=for stopwords ARG admin crontabbed dists rsyncdone BinGOs FRMRecent
 
 =head1 SYNOPSIS
 
@@ -554,10 +552,6 @@ Tells this module to shut down the underlying rsync session and terminate itself
 
 	$_[KERNEL]->post( 'SmokeBox-Rsync', 'shutdown' );
 
-=head2 More Ideas
-
-None as of now, if you have ideas please submit them to me!
-
 =head2 Module Notes
 
 You can enable debugging mode by doing this:
@@ -566,76 +560,7 @@ You can enable debugging mode by doing this:
 	use POE::Component::SmokeBox::Uploads::Rsync;
 
 =head1 SEE ALSO
-
-L<POE::Component::SmokeBox>
-
-L<File::Rsync>
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc POE::Component::SmokeBox::Uploads::Rsync
-
-=head2 Websites
-
-=over 4
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * CPAN Forum
-
-L<http://cpanforum.com/dist/POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * RT: CPAN's Request Tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * CPANTS Kwalitee
-
-L<http://cpants.perl.org/dist/overview/POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * CPAN Testers Results
-
-L<http://cpantesters.org/distro/P/POE-Component-SmokeBox-Uploads-Rsync.html>
-
-=item * CPAN Testers Matrix
-
-L<http://matrix.cpantesters.org/?dist=POE-Component-SmokeBox-Uploads-Rsync>
-
-=item * Git Source Code Repository
-
-L<http://github.com/apocalypse/perl-poe-smokebox-uploads-rsync>
-
-=back
-
-=head2 Bugs
-
-Please report any bugs or feature requests to C<poe-component-smokebox-uploads-rsync at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=POE-Component-SmokeBox-Uploads-Rsync>.  I will be
-notified, and then you'll automatically be notified of progress on your bug as I make changes.
-
-=head1 AUTHOR
-
-Apocalypse E<lt>apocal@cpan.orgE<gt>
-
-Thanks to BinGOs for writing the excellent L<POE::Component::SmokeBox> module!
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright 2010 by Apocalypse
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+POE::Component::SmokeBox
+File::Rsync
 
 =cut

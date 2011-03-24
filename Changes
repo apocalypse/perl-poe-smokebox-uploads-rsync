@@ -1,14 +1,19 @@
-Revision history for Perl extension POE::Component::SmokeBox::Uploads::Rsync
+Revision history for Perl module POE::Component::SmokeBox::Uploads::Rsync
 
-* 0.03
+{{$NEXT}}
+
+	Converted to Dist::Zilla for the release process!
+	Add the 'timeout' parameter to the default rsync options
+
+0.03
 
 	Minor POD tweaks
 	Bumped POE::Session::AttributeBased prereq, thanks CPANTesters!
 
-* 0.02
+0.02
 
 	Minor fixes for CPANTesters/Kwalitee purposes
 
-* 0.01
+0.01
 
 	initial release
