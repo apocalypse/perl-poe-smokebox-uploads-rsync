@@ -169,7 +169,7 @@ sub spawn {
 		$opt{'session'} = undef;
 	} else {
 		# Convert it to an ID
-		if ( UNIVERSAL::isa( $opt{'session'}, 'POE::Session' ) ) {
+		if ( $opt{'session'}->isa( 'POE::Session' ) ) {
 			$opt{'session'} = $opt{'session'}->ID;
 		}
 	}
