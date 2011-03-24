@@ -303,8 +303,8 @@ sub _rsync_status_result : State {
 sub _rsync_err_result : State {
 	my( $ref, $result ) = @_[ARG0, ARG1];
 
-	require Data::Dumper;
-	warn "Got rsync err buffer: " . Data::Dumper::Dumper( $result );
+	warn "Got rsync STDERR:";
+	warn $_ for @$result;
 
 	return;
 }
