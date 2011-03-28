@@ -47,17 +47,25 @@ sub spawn {
 	} else {
 		# TODO should we verify it's a valid rsync path?
 		# i.e. 'cpan.cpantesters.org::cpan'
+
+		# Append the authors/id directory
+		if ( $opt{'rsync_src'} !~ /authors\/id$/ ) {
+			$opt{'rsync_src'} .= 'authors/id';
+		}
 	}
 
 	# Setup the rsync local destination
 	if ( ! exists $opt{'rsync_dst'} or ! defined $opt{'rsync_dst'} ) {
-		my $dir = File::Spec->catdir( $ENV{HOME}, 'CPAN' );
+		my $dir = File::Spec->catdir( $ENV{HOME}, 'CPAN', 'authors', 'id' );
 		if ( DEBUG ) {
 			warn 'Using default RSYNC_DST = ' . $dir;
 		}
 
 		# Set the default
 		$opt{'rsync_dst'} = $dir;
+	} else {
+		# Append the authors/id directory
+		$opt{'rsync_dst'} = File::Spec->catdir( $opt{'rsync_dst'}, 'authors', 'id' );
 	}
 
 	# validate the dst path
@@ -69,7 +77,7 @@ sub spawn {
 	# setup the RSYNC opts
 	if ( ! exists $opt{'rsync'} or ! defined $opt{'rsync'} ) {
 		if ( DEBUG ) {
-			warn 'Using default RSYNC = { archive=>1, compress=>1, omit-dir-times=>1, itemize-changes=>1, exclude=[ /indices/, /misc/, /src/, /scripts/, /modules/.FRMRecent-*, /authors/.FRMRecent-* ], literal=[ --no-motd ], timeout=>1800 }';
+			warn 'Using default RSYNC = { archive=>1, compress=>1, omit-dir-times=>1, itemize-changes=>1, literal=[ --no-motd ], timeout=>1800 }';
 		}
 
 		# Set the default
@@ -88,13 +96,6 @@ sub spawn {
 		'compress'		=> 1,
 		'itemize-changes'	=> 1,
 		'timeout'		=> 1800,
-#		'include'		=> [ '/authors/', '/modules/' ],	# doesn't do what I expect...
-
-		# skip the unimportant directories
-		# skip some files that always fails to sync, and is not needed...
-		# rsync: send_files failed to open "/modules/.FRMRecent-RECENT-1h.yaml-zr8t.yaml" (in cpan): Permission denied (13)
-		# rsync: send_files failed to open "/authors/.FRMRecent-RECENT.recent-qtlN.recent" (in cpan): Permission denied (13)
-		'exclude'		=> [ '/indices/', '/misc/', '/src/', '/scripts/', '/modules/.FRMRecent-*', '/authors/.FRMRecent-*', ],
 
 		# skip the motd, which just consumes bandwidth ;)
 		'literal'		=> [ '--no-motd', ],
@@ -163,10 +164,13 @@ sub spawn {
 		# set the default
 		$opt{'session'} = undef;
 	} else {
-		# Convert it to an ID
-		if ( $opt{'session'}->isa( 'POE::Session' ) ) {
-			$opt{'session'} = $opt{'session'}->ID;
-		}
+		# eval it because it might already be a regular scalar...
+		eval {
+			# Convert it to an ID
+			if ( $opt{'session'}->isa( 'POE::Session' ) ) {
+				$opt{'session'} = $opt{'session'}->ID;
+			}
+		};
 	}
 
 	# Create our session
@@ -309,19 +313,19 @@ sub _rsync_out_result : State {
 
 	# Parse the result, and inform the session of new uploads!
 	# Look at the rsync man page for details on the itemize-changes format
-	# >f.st...... authors/id/R/RC/RCAPUTO/CHECKSUMS
-	# >f.st...... authors/id/R/RD/RDB/CHECKSUMS
-	# >f+++++++++ authors/id/R/RD/RDB/POE-Component-SNMP-1.1004.meta
-	# >f+++++++++ authors/id/R/RD/RDB/POE-Component-SNMP-1.1004.readme
-	# >f+++++++++ authors/id/R/RD/RDB/POE-Component-SNMP-1.1004.tar.gz
-	# >f+++++++++ authors/id/R/RD/RDB/POE-Component-SNMP-1.1005.meta
-	# >f+++++++++ authors/id/R/RD/RDB/POE-Component-SNMP-1.1005.readme
-	# >f+++++++++ authors/id/R/RD/RDB/POE-Component-SNMP-1.1005.tar.gz
-	# >f.st...... authors/id/R/RE/REDICAPS/CHECKSUMS
+	# >f.st...... id/R/RC/RCAPUTO/CHECKSUMS
+	# >f.st...... id/R/RD/RDB/CHECKSUMS
+	# >f+++++++++ id/R/RD/RDB/POE-Component-SNMP-1.1004.meta
+	# >f+++++++++ id/R/RD/RDB/POE-Component-SNMP-1.1004.readme
+	# >f+++++++++ id/R/RD/RDB/POE-Component-SNMP-1.1004.tar.gz
+	# >f+++++++++ id/R/RD/RDB/POE-Component-SNMP-1.1005.meta
+	# >f+++++++++ id/R/RD/RDB/POE-Component-SNMP-1.1005.readme
+	# >f+++++++++ id/R/RD/RDB/POE-Component-SNMP-1.1005.tar.gz
+	# >f.st...... id/R/RE/REDICAPS/CHECKSUMS
 	my @modules;
 	foreach my $l ( @$result ) {
 		# file regex taken from POE::Component::SmokeBox::Uploads::NNTP, thanks BinGOs!
-		if ( $l =~ /^\>f\+{9}\s+authors\/id\/(\w+\/\w+\/\w+\/.+\.(?:tar\.(?:gz|bz2)|tgz|zip))$/ ) {
+		if ( $l =~ /^\>f\+{9}\s+id\/(\w+\/\w+\/\w+\/.+\.(?:tar\.(?:gz|bz2)|tgz|zip))$/ ) {
 			push( @modules, $1 );
 		}
 	}
@@ -405,7 +409,7 @@ sub shutdown : State {
 
 =pod
 
-=for stopwords ARG admin crontabbed dists rsyncdone BinGOs FRMRecent
+=for stopwords ARG admin crontabbed dists rsyncdone BinGOs
 
 =for Pod::Coverage DEBUG
 
@@ -444,7 +448,9 @@ sub shutdown : State {
 =head1 DESCRIPTION
 
 POE::Component::SmokeBox::Uploads::Rsync is a POE component that alerts newly uploaded CPAN distributions. It obtains this information by
-running rsync against a CPAN mirror. This effectively keeps your local CPAN mirror up-to-date too!
+running rsync against a CPAN mirror. This effectively keeps your local CPAN mirror up-to-date too! This is only for the C<CPAN/authors/id>
+directory, to make it easier on the rsync process. If you want to keep your entire mirror up-to-date, please use your normal
+( crontabbed? ) rsync script and tell it to exclude the C<authors/id> directory to prevent missed uploads.
 
 Really, all you have to do is load the module and call it's spawn() method:
 
@@ -470,16 +476,20 @@ consult the L<http://www.cpan.org/SITES.html> mirror list.
 
 The default is: undefined
 
+This component will automatically append 'authors/id' to the src, please don't add it yourself.
+
 =head3 rsync_dst
 
 This sets the local rsync destination ( where your local CPAN mirror resides )
 
 The default is: $ENV{HOME}/CPAN
 
+This component will automatically append 'authors/id' to the dst, please don't add it yourself.
+
 =head3 rsync
 
-This sets the rsync options. Normally you do not need to touch this, but if you do - please be aware that your options clobbers the default values! Please
-look at the L<File::Rsync> manpage for the options. Again, touch this if you know what you are doing!
+This sets the rsync options. Normally you do not need to touch this, but if you do - please be aware that your options clobbers the default
+values! Please look at the L<File::Rsync> manpage for the options. Again, touch this if you know what you are doing!
 
 The default is:
 
@@ -488,13 +498,9 @@ The default is:
 		compress 	=> 1,
 		omit-dir-times	=> 1,
 		itemize-changes	=> 1,
-		exclude 	=> [ qw( /indices/ /misc/ /src/ /scripts/ /modules/.FRMRecent-* /authors/.FRMRecent-* ) ],
 		literal 	=> [ qw( --no-motd ) ],
 		timeout		=> 1800
 	}
-
-NOTE: By default we only mirror the /authors/ and /modules/ subdirectories of CPAN. If you want to keep your mirror up-to-date with regards to the other paths,
-please use your normal ( crontabbed? ) rsync script and tell it to exclude authors+modules to prevent missed dists.
 
 NOTE: The usage of "omit-dir-times/itemize-changes" means you need a rsync newer than v2.6.4!
 
@@ -506,7 +512,8 @@ The default is: 3600 ( 1 hour )
 
 =head3 event
 
-This sets the event which will receive notification about uploaded dists. It will receive one argument in ARG0, which is a single string. An example is:
+This sets the event which will receive notification about uploaded dists. It will receive one argument in ARG0, which is a single string. An
+example is:
 
 	V/VP/VPIT/CPANPLUS-Dist-Gentoo-0.07.tar.gz
 
@@ -514,14 +521,15 @@ The default is: upload
 
 =head3 session
 
-This sets the session which will receive the notification event. You can either use a POE session id, alias, or reference. You can just spawn the component
-inside another session and it will automatically receive the notifications.
+This sets the session which will receive the notification event. You can either use a POE session id, alias, or reference. You can just spawn
+the component inside another session and it will automatically receive the notifications.
 
 The default is: undef ( caller session )
 
 =head3 rsyncdone
 
-This sets an additional event when the rsync process is done executing. It will receive a hashref in ARG0 which details some information. An example is:
+This sets an additional event when the rsync process is done executing. It will receive a hashref in ARG0 which details some information. An
+example is:
 
 	{
 		'status'	=> 1,		# boolean value whether the rsync run was successful or not
@@ -531,9 +539,9 @@ This sets an additional event when the rsync process is done executing. It will 
 		'dists'		=> 7,		# number of new distributions uploaded to CPAN
 	}
 
-NOTE: In my testing sometimes rsync throws an exit code of 23 ( Partial transfer due to error ) or 24 ( Partial transfer due to vanished source files ),
-this module automatically treats them as "success" and sets the exit code to 0. This is caused by the intricacies of rsync trying to mirror some forbidden
-files and deletions on the host. Hence, the ".FRMRecent" stuff you see in the exclude list - this is one of the common error 23 causes :)
+NOTE: In my testing sometimes rsync throws an exit code of 23 ( Partial transfer due to error ) or 24 ( Partial transfer due to vanished source
+files ), this module automatically treats them as "success" and sets the exit code to 0. This is caused by the intricacies of rsync trying to
+mirror some forbidden files and deletions on the host. See L<https://bugzilla.samba.org/show_bug.cgi?id=3653> for more info.
 
 The default is: undef ( not enabled )
 
@@ -541,7 +549,7 @@ The default is: undef ( not enabled )
 
 There is only one command you can use, as this is a very simple module.
 
-=head3 shutdown()
+=head3 shutdown
 
 Tells this module to shut down the underlying rsync session and terminate itself.
 
