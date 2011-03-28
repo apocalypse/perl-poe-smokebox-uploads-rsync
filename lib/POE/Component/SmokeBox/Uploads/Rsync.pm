@@ -10,11 +10,6 @@ use parent 'POE::Session::AttributeBased'; # TODO do we really need to prereq 0.
 # The misc stuff we will use
 use File::Spec;
 
-# Work-around for dzil ( I'm too lazy to add it to dist.ini :)
-if ( 0 ) {
-	require File::Rsync;
-}
-
 # Set some constants
 BEGIN {
 	if ( ! defined &DEBUG ) { *DEBUG = sub () { 0 } }
@@ -50,7 +45,7 @@ sub spawn {
 		}
 		return 0;
 	} else {
-		# should we verify it's a valid rsync path?
+		# TODO should we verify it's a valid rsync path?
 		# i.e. 'cpan.cpantesters.org::cpan'
 	}
 
@@ -356,7 +351,7 @@ sub _rsync_out_result : State {
 sub _rsync_generic_error : State {
 	my $err = $_[ARG0];
 
-	if( $err->{stderr} ) {	## no critic ( ProhibitAccessOfPrivateData )
+	if( $err->{stderr} ) {
 		# $err->{stderr} is a line that was printed to the
 		# sub-processes' STDERR.  99% of the time that means from
 		# your code.
