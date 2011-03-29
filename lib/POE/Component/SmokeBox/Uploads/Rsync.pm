@@ -54,8 +54,12 @@ sub spawn {
 		# i.e. 'cpan.cpantesters.org::cpan'
 
 		# Append the authors/id directory
-		if ( $opt{'rsync_src'} !~ /authors\/id$/ ) {
-			$opt{'rsync_src'} .= 'authors/id';
+		if ( $opt{'rsync_src'} !~ m|authors/id$| ) {
+			if ( $opt{'rsync_src'} =~ m|/$| ) {
+				$opt{'rsync_src'} .= 'authors/id';
+			} else {
+				$opt{'rsync_src'} .= '/authors/id';
+			}
 		}
 	}
 

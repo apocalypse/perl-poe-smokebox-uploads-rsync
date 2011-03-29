@@ -4,6 +4,7 @@ Revision history for Perl module POE::Component::SmokeBox::Uploads::Rsync
 
 	Converted to Dist::Zilla for the release process!
 	Add the 'timeout' parameter to the default rsync options
+	We rsync *only* the CPAN/authors/id directory now, for more speed+sanity
 
 0.03
 
