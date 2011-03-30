@@ -64,8 +64,10 @@ sub spawn {
 	}
 
 	# Setup the rsync local destination
+	# Append the authors directory ( rsync will sync into id automatically )
+	# If we appended "authors/id" then rsync will create a local authors/id/id directory!$!@%#$
 	if ( ! exists $opt{'rsync_dst'} or ! defined $opt{'rsync_dst'} ) {
-		my $dir = File::Spec->catdir( $ENV{HOME}, 'CPAN', 'authors', 'id' );
+		my $dir = File::Spec->catdir( $ENV{HOME}, 'CPAN', 'authors' );
 		if ( DEBUG ) {
 			warn 'Using default RSYNC_DST = ' . $dir;
 		}
@@ -73,8 +75,9 @@ sub spawn {
 		# Set the default
 		$opt{'rsync_dst'} = $dir;
 	} else {
-		# Append the authors/id directory
-		$opt{'rsync_dst'} = File::Spec->catdir( $opt{'rsync_dst'}, 'authors', 'id' );
+		if ( $opt{'rsync_dst'} !~ /authors$/ ) {
+			$opt{'rsync_dst'} = File::Spec->catdir( $opt{'rsync_dst'}, 'authors' );
+		}
 	}
 
 	# validate the dst path
@@ -296,6 +299,7 @@ sub _rsync_status_result : State {
 			$_[HEAP]->{'RSYNC'}->err( { 'event' => '_rsync_err_result' } );
 		} else {
 			# We're done with the rsync subprocess, shut it down!
+			$_[KERNEL]->post( $_[HEAP]->{'RSYNC'}->session_id, 'shutdown' );
 			undef $_[HEAP]->{'RSYNC'};
 		}
 
@@ -325,6 +329,7 @@ sub _rsync_err_result : State {
 	warn $_ for @$result;
 
 	# We're done with the rsync subprocess, shut it down!
+	$_[KERNEL]->post( $_[HEAP]->{'RSYNC'}->session_id, 'shutdown' );
 	undef $_[HEAP]->{'RSYNC'};
 
 	return;
@@ -332,6 +337,10 @@ sub _rsync_err_result : State {
 
 sub _rsync_out_result : State {
 	my( $ref, $result ) = @_[ARG0, ARG1];
+
+	# We're done with the rsync subprocess, shut it down!
+	$_[KERNEL]->post( $_[HEAP]->{'RSYNC'}->session_id, 'shutdown' );
+	undef $_[HEAP]->{'RSYNC'};
 
 	# Parse the result, and inform the session of new uploads!
 	# Look at the rsync man page for details on the itemize-changes format
@@ -368,9 +377,6 @@ sub _rsync_out_result : State {
 	foreach my $m ( @modules ) {
 		$_[KERNEL]->post( $_[HEAP]->{'SESSION'}, $_[HEAP]->{'EVENT'}, $m );
 	}
-
-	# We're done with the rsync subprocess, shut it down!
-	undef $_[HEAP]->{'RSYNC'};
 
 	# Do another run in INTERVAL
 	$_[KERNEL]->delay_set( '_rsync_start' => $_[HEAP]->{'INTERVAL'} );
@@ -421,6 +427,7 @@ sub shutdown : State {
 	# tell poco-generic to shutdown
 	if ( defined $_[HEAP]->{'RSYNC'} ) {
 		$_[KERNEL]->call( $_[HEAP]->{'RSYNC'}->session_id, 'shutdown' );
+		undef $_[HEAP]->{'RSYNC'};
 	}
 
 	# decrement the refcount
@@ -532,7 +539,7 @@ consult the L<http://www.cpan.org/SITES.html> mirror list.
 
 The default is: undefined
 
-This component will automatically append 'authors/id' to the src, please don't add it yourself.
+This component will automatically append '/authors/id' to the src, please don't add it yourself.
 
 =head3 rsync_dst
 
@@ -540,7 +547,7 @@ This sets the local rsync destination ( where your local CPAN mirror resides )
 
 The default is: $ENV{HOME}/CPAN
 
-This component will automatically append 'authors/id' to the dst, please don't add it yourself.
+This component will automatically append '/authors' to the dst, please don't add it yourself.
 
 =head3 rsync
 
