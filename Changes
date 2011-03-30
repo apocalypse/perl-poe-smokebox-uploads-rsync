@@ -3,8 +3,10 @@ Revision history for Perl module POE::Component::SmokeBox::Uploads::Rsync
 {{$NEXT}}
 
 	Converted to Dist::Zilla for the release process!
-	Add the 'timeout' parameter to the default rsync options
+	Add the 'timeout' and 'contimeout' parameter to the default rsync options
 	We rsync *only* the CPAN/authors/id directory now, for more speed+sanity
+	Kill the rsync subprocess on completion, so we save memory until the next run
+	Use the 'alt_fork' option to POE::Component::Generic to save even more memory
 
 0.03
 

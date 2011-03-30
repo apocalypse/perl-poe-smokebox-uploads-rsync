@@ -86,7 +86,7 @@ sub spawn {
 	# setup the RSYNC opts
 	if ( ! exists $opt{'rsync'} or ! defined $opt{'rsync'} ) {
 		if ( DEBUG ) {
-			warn 'Using default RSYNC = { archive=>1, compress=>1, omit-dir-times=>1, itemize-changes=>1, literal=[ --no-motd ], timeout=>1800 }';
+			warn 'Using default RSYNC = { archive=>1, compress=>1, omit-dir-times=>1, itemize-changes=>1, timeout=>600, contimeout=>120, literal=[ --no-motd ] }';
 		}
 
 		# Set the default
@@ -104,7 +104,8 @@ sub spawn {
 		'archive'		=> 1,
 		'compress'		=> 1,
 		'itemize-changes'	=> 1,
-		'timeout'		=> 1800,
+		'timeout'		=> 10 * 60,	# 10min
+		'contimeout'		=> 2 * 60,	# 2min
 
 		# skip the motd, which just consumes bandwidth ;)
 		'literal'		=> [ '--no-motd', ],
@@ -224,17 +225,6 @@ sub _start : State {
 	# Give it a refcount
 	$_[KERNEL]->refcount_increment( $_[HEAP]->{'SESSION'}, __PACKAGE__ );
 
-	# spawn poco-generic
-	$_[HEAP]->{'RSYNC'} = POE::Component::Generic->spawn(
-		'package'		=> 'File::Rsync',
-		'methods'		=> [ qw( exec status out err ) ],
-
-		'object_options'	=> [ %{ $_[HEAP]->{'RSYNC_OPT'} } ],
-		'alias'			=> $_[HEAP]->{'ALIAS'} . '-' . 'Generic',
-
-		( DEBUG ? ( 'debug' => 1, 'error' => '_rsync_generic_error' ) : () ),
-	);
-
 	# Do the first rsync!
 	$_[KERNEL]->yield( '_rsync_start' );
 
@@ -247,6 +237,18 @@ sub _rsync_start : State {
 	}
 
 	$_[HEAP]->{'STARTTIME'} = time;
+
+	# spawn poco-generic
+	$_[HEAP]->{'RSYNC'} = POE::Component::Generic->spawn(
+		'alt_fork'		=> 1,	# conserve memory by using exec
+		'package'		=> 'File::Rsync',
+		'methods'		=> [ qw( exec status out err ) ],
+
+		'object_options'	=> [ %{ $_[HEAP]->{'RSYNC_OPT'} } ],
+		'alias'			=> $_[HEAP]->{'ALIAS'} . '-' . 'Generic',
+
+		( DEBUG ? ( 'debug' => 1, 'error' => '_rsync_generic_error' ) : () ),
+	);
 
 	# tell poco-generic to do it!
 	$_[HEAP]->{'RSYNC'}->exec( { 'event' => '_rsync_exec_result' } );
@@ -288,6 +290,9 @@ sub _rsync_status_result : State {
 		if ( DEBUG ) {
 			warn "Rsync exec error - status: $result";
 			$_[HEAP]->{'RSYNC'}->err( { 'event' => '_rsync_err_result' } );
+		} else {
+			# We're done with the rsync subprocess, shut it down!
+			undef $_[HEAP]->{'RSYNC'};
 		}
 
 		# Let the session know the run is done
@@ -313,6 +318,9 @@ sub _rsync_err_result : State {
 
 	warn "Got rsync STDERR:";
 	warn $_ for @$result;
+
+	# We're done with the rsync subprocess, shut it down!
+	undef $_[HEAP]->{'RSYNC'};
 
 	return;
 }
@@ -354,6 +362,9 @@ sub _rsync_out_result : State {
 	foreach my $m ( @modules ) {
 		$_[KERNEL]->post( $_[HEAP]->{'SESSION'}, $_[HEAP]->{'EVENT'}, $m );
 	}
+
+	# We're done with the rsync subprocess, shut it down!
+	undef $_[HEAP]->{'RSYNC'};
 
 	# Do another run in INTERVAL
 	$_[KERNEL]->delay_set( '_rsync_start' => $_[HEAP]->{'INTERVAL'} );
@@ -507,8 +518,9 @@ The default is:
 		compress 	=> 1,
 		omit-dir-times	=> 1,
 		itemize-changes	=> 1,
+		timeout		=> 10 * 60,	# 10min
+		contimeout	=> 2 * 60,	# 2min
 		literal 	=> [ qw( --no-motd ) ],
-		timeout		=> 1800
 	}
 
 NOTE: The usage of "omit-dir-times/itemize-changes" means you need a rsync newer than v2.6.4!
