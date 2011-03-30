@@ -119,6 +119,10 @@ sub spawn {
 	$opt{'rsync'}->{'src'} = delete $opt{'rsync_src'};
 	$opt{'rsync'}->{'dst'} = delete $opt{'rsync_dst'};
 
+	# TODO File::Rsync doesn't support contimeout!
+	# Ticket here: https://rt.cpan.org/Ticket/Display.html?id=67076
+	push( @{ $opt{'rsync'}{'literal'} }, "--contimeout=" . delete $opt{'rsync'}{'contimeout'} );
+
 	# setup the alias
 	if ( ! exists $opt{'alias'} or ! defined $opt{'alias'} ) {
 		if ( DEBUG ) {
@@ -300,6 +304,7 @@ sub _rsync_status_result : State {
 			$_[KERNEL]->post( $_[HEAP]->{'SESSION'}, $_[HEAP]->{'RSYNCDONE'}, {
 				'status'	=> 0,
 				'exit'		=> $result,
+				'exit_str'	=> _exit2str( $result ),
 				'starttime'	=> $_[HEAP]->{'STARTTIME'},
 				'stoptime'	=> time,
 				'dists'		=> 0,
@@ -352,6 +357,7 @@ sub _rsync_out_result : State {
 		$_[KERNEL]->post( $_[HEAP]->{'SESSION'}, $_[HEAP]->{'RSYNCDONE'}, {
 			'status'	=> 1,
 			'exit'		=> 0,
+			'exit_str'	=> _exit2str( 0 ),
 			'starttime'	=> $_[HEAP]->{'STARTTIME'},
 			'stoptime'	=> time,
 			'dists'		=> scalar @modules,
@@ -423,6 +429,36 @@ sub shutdown : State {
 	}
 
 	return;
+}
+
+{
+	# Taken from the rsync v3.0.8 manpage
+	my %exitcodes = (
+		0  => 'Success',
+		1  => 'Syntax or usage error',
+		2  => 'Protocol incompatibility',
+		3  => 'Errors selecting input/output files, dirs',
+		4  => 'Requested action not supported: an attempt was made to manipulate 64-bit files on a platform that cannot support them; or an option was specified that is supported by the client and not by the server.',
+		5  => 'Error starting client-server protocol',
+		6  => 'Daemon unable to append to log-file',
+		10 => 'Error in socket I/O',
+		11 => 'Error in file I/O',
+		12 => 'Error in rsync protocol data stream',
+		13 => 'Errors with program diagnostics',
+		14 => 'Error in IPC code',
+		20 => 'Received SIGUSR1 or SIGINT',
+		21 => 'Some error returned by waitpid()',
+		22 => 'Error allocating core memory buffers',
+		23 => 'Partial transfer due to error',
+		24 => 'Partial transfer due to vanished source files',
+		25 => 'The --max-delete limit stopped deletions',
+		30 => 'Timeout in data send/receive',
+		35 => 'Timeout waiting for daemon connection',
+	);
+
+	sub _exit2str {
+		return $exitcodes{ $_[0] };
+	}
 }
 
 1;
@@ -523,7 +559,7 @@ The default is:
 		literal 	=> [ qw( --no-motd ) ],
 	}
 
-NOTE: The usage of "omit-dir-times/itemize-changes" means you need a rsync newer than v2.6.4!
+NOTE: The usage of "omit-dir-times/itemize-changes/contimeout" means you need a rsync newer than v3.0.0!
 
 =head3 interval
 
@@ -555,6 +591,7 @@ example is:
 	{
 		'status'	=> 1,		# boolean value whether the rsync run was successful or not
 		'exit'		=> 0,		# exit code of the rsync process, useful to look up rsync errors ( already bit-shifted! )
+		'exit_str'	=> 'Success',	# stringified exit code of the rsync process
 		'starttime'	=> 1260432932,	# self-explanatory
 		'stoptime'	=> 1260432965,	# self-explanatory
 		'dists'		=> 7,		# number of new distributions uploaded to CPAN
