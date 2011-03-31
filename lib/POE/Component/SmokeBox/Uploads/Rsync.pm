@@ -308,7 +308,7 @@ sub _rsync_status_result : State {
 			$_[KERNEL]->post( $_[HEAP]->{'SESSION'}, $_[HEAP]->{'RSYNCDONE'}, {
 				'status'	=> 0,
 				'exit'		=> $result,
-				'exit_str'	=> _exit2str( $result ),
+				'exit_str'	=> rsync_exit_string( $result ),
 				'starttime'	=> $_[HEAP]->{'STARTTIME'},
 				'stoptime'	=> time,
 				'dists'		=> 0,
@@ -366,7 +366,7 @@ sub _rsync_out_result : State {
 		$_[KERNEL]->post( $_[HEAP]->{'SESSION'}, $_[HEAP]->{'RSYNCDONE'}, {
 			'status'	=> 1,
 			'exit'		=> 0,
-			'exit_str'	=> _exit2str( 0 ),
+			'exit_str'	=> rsync_exit_string( 0 ),
 			'starttime'	=> $_[HEAP]->{'STARTTIME'},
 			'stoptime'	=> time,
 			'dists'		=> scalar @modules,
@@ -463,7 +463,7 @@ sub shutdown : State {
 		35 => 'Timeout waiting for daemon connection',
 	);
 
-	sub _exit2str {
+	sub rsync_exit_string {
 		return $exitcodes{ $_[0] };
 	}
 }
@@ -474,7 +474,7 @@ sub shutdown : State {
 
 =for stopwords ARG admin crontabbed dists rsyncdone BinGOs
 
-=for Pod::Coverage DEBUG
+=for Pod::Coverage DEBUG rsync_exit_string
 
 =head1 SYNOPSIS
 
