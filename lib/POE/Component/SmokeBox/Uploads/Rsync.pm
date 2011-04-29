@@ -43,6 +43,18 @@ sub spawn {
 	# lowercase keys
 	%opt = map { lc($_) => $opt{$_} } keys %opt;
 
+	# Should we rsync the entire CPAN or just the authors directory?
+	if ( ! exists $opt{'rsync_all'} or ! defined $opt{'rsync_all'} ) {
+		if ( DEBUG ) {
+			warn 'Using default RSYNC_ALL = 0';
+		}
+
+		$opt{'rsync_all'} = 0;
+	} else {
+		# booleanize it
+		$opt{'rsync_all'} = $opt{'rsync_all'} ? 1 : 0;
+	}
+
 	# setup the rsync server
 	if ( ! exists $opt{'rsync_src'} or ! defined $opt{'rsync_src'} ) {
 		if ( DEBUG ) {
@@ -54,11 +66,13 @@ sub spawn {
 		# i.e. 'cpan.cpantesters.org::cpan'
 
 		# Append the authors/id directory
-		if ( $opt{'rsync_src'} !~ m|authors/id$| ) {
-			if ( $opt{'rsync_src'} =~ m|/$| ) {
-				$opt{'rsync_src'} .= 'authors/id';
-			} else {
-				$opt{'rsync_src'} .= '/authors/id';
+		if ( ! $opt{'rsync_all'} ) {
+			if ( $opt{'rsync_src'} !~ m|authors/id$| ) {
+				if ( $opt{'rsync_src'} =~ m|/$| ) {
+					$opt{'rsync_src'} .= 'authors/id';
+				} else {
+					$opt{'rsync_src'} .= '/authors/id';
+				}
 			}
 		}
 	}
@@ -75,8 +89,10 @@ sub spawn {
 		# Set the default
 		$opt{'rsync_dst'} = $dir;
 	} else {
-		if ( $opt{'rsync_dst'} !~ /authors$/ ) {
-			$opt{'rsync_dst'} = File::Spec->catdir( $opt{'rsync_dst'}, 'authors' );
+		if ( ! $opt{'rsync_all'} ) {
+			if ( $opt{'rsync_dst'} !~ /authors$/ ) {
+				$opt{'rsync_dst'} = File::Spec->catdir( $opt{'rsync_dst'}, 'authors' );
+			}
 		}
 	}
 
@@ -112,6 +128,9 @@ sub spawn {
 
 		# skip the motd, which just consumes bandwidth ;)
 		'literal'		=> [ '--no-motd', ],
+
+		# if we rsync the entire CPAN, we delete files too!
+		( $opt{'rsync_all'} ? ( 'delete' => 1 ) : () ),
 
 		# use the provided options
 		%{ $opt{'rsync'} },
@@ -196,6 +215,7 @@ sub spawn {
 		'heap'	=>	{
 			'ALIAS'		=> $opt{'alias'},
 			'RSYNC_OPT'	=> $opt{'rsync'},
+			'RSYNC_ALL'	=> $opt{'rsync_all'},
 			'INTERVAL'	=> $opt{'interval'},
 
 			'SESSION'	=> $opt{'session'},
@@ -356,7 +376,8 @@ sub _rsync_out_result : State {
 	my @modules;
 	foreach my $l ( @$result ) {
 		# file regex taken from POE::Component::SmokeBox::Uploads::NNTP, thanks BinGOs!
-		if ( $l =~ /^\>f\+{9}\s+id\/(\w+\/\w+\/\w+\/.+\.(?:tar\.(?:gz|bz2)|tgz|zip))$/ ) {
+		# if RSYNC_ALL is enabled, we rsync from the root - otherwise the id directory
+		if ( $l =~ /^\>f\+{9}\s+(?:authors\/)?id\/(\w+\/\w+\/\w+\/.+\.(?:tar\.(?:gz|bz2)|tgz|zip))$/ ) {
 			push( @modules, $1 );
 		}
 	}
@@ -539,7 +560,7 @@ consult the L<http://www.cpan.org/SITES.html> mirror list.
 
 The default is: undefined
 
-This component will automatically append '/authors/id' to the src, please don't add it yourself.
+This component will automatically append '/authors/id' to the src, please don't add it yourself. ( if L</rsync_all> == 0 )
 
 =head3 rsync_dst
 
@@ -547,7 +568,17 @@ This sets the local rsync destination ( where your local CPAN mirror resides )
 
 The default is: $ENV{HOME}/CPAN
 
-This component will automatically append '/authors' to the dst, please don't add it yourself.
+This component will automatically append '/authors' to the dst, please don't add it yourself. ( if L</rsync_all> == 0 )
+
+=head3 rsync_all
+
+If this is a true value, this module will rsync the entire CPAN. Useful for lazy people who don't want to run a separate rsync process
+for the rest of CPAN. If it is false, this module will rsync only the authors/id directory to make the rsync run faster.
+
+Additionally, if this is true the option C<--delete> will be passed to the rsync process. This keeps your local copy exactly the same as it
+is on CPAN. If you want to override this just pass a delete=0 option to the L</rsync> hash.
+
+The default is: false
 
 =head3 rsync
 

@@ -2,6 +2,8 @@ Revision history for Perl module POE::Component::SmokeBox::Uploads::Rsync
 
 {{$NEXT}}
 
+	Add the 'rsync_all' option for lazy people who want to rsync the entire CPAN
+
 1.000
 	Released: 2011-03-31 23:00:20 UTC
 
