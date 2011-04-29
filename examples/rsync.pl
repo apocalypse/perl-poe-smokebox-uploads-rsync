@@ -17,8 +17,7 @@ POE::Session->create(
 sub _start {
 	# Tell the poco to start it's stuff!
 	POE::Component::SmokeBox::Uploads::Rsync->spawn(
-		# thanks to DAGOLDEN for allowing us to use his mirror!
-		'rsync_src'	=> 'cpan.dagolden.com::CPAN',
+		'rsync_src'	=> 'mirrors.kernel.org::mirrors/CPAN/',
 		'rsyncdone'	=> 'rsyncdone',
 	) or die "Unable to spawn the poco-rsync!";
 

@@ -81,11 +81,9 @@ sub spawn {
 	# Append the authors directory ( rsync will sync into id automatically )
 	# If we appended "authors/id" then rsync will create a local authors/id/id directory!$!@%#$
 	if ( ! exists $opt{'rsync_dst'} or ! defined $opt{'rsync_dst'} ) {
-		my $dir;
+		my $dir = File::Spec->catdir( $ENV{HOME}, 'CPAN' );
 		if ( ! $opt{'rsync_all'} ) {
-			$dir = File::Spec->catdir( $ENV{HOME}, 'CPAN', 'authors' );
-		} else {
-			$dir = File::Spec->catdir( $ENV{HOME}, 'CPAN' );
+			$dir = File::Spec->catdir( $dir, 'authors' );
 		}
 
 		if ( DEBUG ) {
@@ -521,8 +519,7 @@ sub shutdown : State {
 	sub _start {
 		# Tell the poco to start it's stuff!
 		POE::Component::SmokeBox::Uploads::Rsync->spawn(
-			# thanks to DAGOLDEN for allowing us to use his mirror!
-			'rsync_src'	=> 'cpan.dagolden.com::CPAN',
+			'rsync_src'	=> 'mirrors.kernel.org::mirrors/CPAN/',
 		) or die "Unable to spawn the poco-rsync!";
 
 		return;
@@ -538,9 +535,8 @@ sub shutdown : State {
 =head1 DESCRIPTION
 
 POE::Component::SmokeBox::Uploads::Rsync is a POE component that alerts newly uploaded CPAN distributions. It obtains this information by
-running rsync against a CPAN mirror. This effectively keeps your local CPAN mirror up-to-date too! This is only for the C<CPAN/authors/id>
-directory, to make it easier on the rsync process. If you want to keep your entire mirror up-to-date, please use your normal
-( crontabbed? ) rsync script and tell it to exclude the C<authors/id> directory to prevent missed uploads.
+running rsync against a CPAN mirror. This is only for the C<CPAN/authors/id> directory, to make it easier on the rsync process. If you
+want to keep your entire mirror up-to-date, you can enable the L</rsync_all> option.
 
 Really, all you have to do is load the module and call it's spawn() method:
 
@@ -564,17 +560,15 @@ The default is: SmokeBox-Rsync
 This sets the rsync source ( the server you will be mirroring from ) and it is a mandatory parameter. For a list of valid rsync mirrors, please
 consult the L<http://www.cpan.org/SITES.html> mirror list.
 
-The default is: undefined
+An example is: mirrors.kernel.org::mirrors/CPAN/
 
-This component will automatically append '/authors/id' to the src, please don't add it yourself. ( if L</rsync_all> == 0 )
+The default is: undefined
 
 =head3 rsync_dst
 
 This sets the local rsync destination ( where your local CPAN mirror resides )
 
 The default is: $ENV{HOME}/CPAN
-
-This component will automatically append '/authors' to the dst, please don't add it yourself. ( if L</rsync_all> == 0 )
 
 =head3 rsync_all
 
