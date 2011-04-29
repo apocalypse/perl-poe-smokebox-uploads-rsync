@@ -81,7 +81,13 @@ sub spawn {
 	# Append the authors directory ( rsync will sync into id automatically )
 	# If we appended "authors/id" then rsync will create a local authors/id/id directory!$!@%#$
 	if ( ! exists $opt{'rsync_dst'} or ! defined $opt{'rsync_dst'} ) {
-		my $dir = File::Spec->catdir( $ENV{HOME}, 'CPAN', 'authors' );
+		my $dir;
+		if ( ! $opt{'rsync_all'} ) {
+			$dir = File::Spec->catdir( $ENV{HOME}, 'CPAN', 'authors' );
+		} else {
+			$dir = File::Spec->catdir( $ENV{HOME}, 'CPAN' );
+		}
+
 		if ( DEBUG ) {
 			warn 'Using default RSYNC_DST = ' . $dir;
 		}
