@@ -20,6 +20,17 @@ BEGIN {
 	if ( ! defined &DEBUG ) { *DEBUG = sub () { 0 } }
 }
 
+#<@BinGOs> that works. I have no FRMRecent files anywhere in *this* particular mirror's tree
+#<@BinGOs> I run rrr-client on the 'velvet' host and rsync to two other boxen from there.
+#
+#bash-4.0# cat exclude.cpan
+#/modules/by-module/*
+#/modules/by-category/*
+#*FRMRecent-RECENT*
+#bash-4.0#
+#
+#/usr/pkg/bin/rsync -av --no-owner --delete --exclude-from /root/exclude.cpan --delete-excluded rsync://velvet.bingosnet.co.uk /cpan /home/ftp/CPAN/ 2>&1 | tee -a /root/cpan.log
+
 # starts the component!
 sub spawn {
 	my $class = shift;
