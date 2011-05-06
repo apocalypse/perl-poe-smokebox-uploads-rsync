@@ -10,7 +10,8 @@ use parent 'POE::Session::AttributeBased'; # TODO do we really need to prereq 0.
 # The misc stuff we will use
 use File::Spec;
 
-# TODO argh, we need to fool Test::Apocalypse::Dependencies!
+# argh, we need to fool Test::Apocalypse::Dependencies!
+# Also, this will let dzil autoprereqs pick it up without actually loading it...
 if ( 0 ) {
 	require File::Rsync;
 }
