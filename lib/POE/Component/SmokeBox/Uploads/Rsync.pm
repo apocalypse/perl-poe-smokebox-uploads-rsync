@@ -35,16 +35,17 @@ BEGIN {
 # starts the component!
 sub spawn {
 	my $class = shift;
+	$class = $class; # TODO shutup UnusedVars
 
 	# The options hash
 	my %opt;
 
 	# Support passing in a hash ref or a regular hash
-	if ( ( @_ & 1 ) and ref $_[0] and ref( $_[0] ) eq 'HASH' ) {
+	if ( scalar @_ == 1 and ref $_[0] and ref( $_[0] ) eq 'HASH' ) {
 		%opt = %{ $_[0] };
 	} else {
 		# Sanity checking
-		if ( @_ & 1 ) {
+		if ( @_ % 2 ) {
 			warn __PACKAGE__ . ' requires an even number of options passed to spawn()';
 			return 0;
 		}
@@ -300,7 +301,7 @@ sub _rsync_start : State {
 }
 
 sub _rsync_exec_result : State {
-	my( $ref, $result ) = @_[ARG0, ARG1];
+	my $result = $_[ARG1];
 
 	if ( DEBUG ) {
 		warn "Rsync exec result: $result";
@@ -319,7 +320,7 @@ sub _rsync_exec_result : State {
 }
 
 sub _rsync_status_result : State {
-	my( $ref, $result ) = @_[ARG0, ARG1];
+	my $result = $_[ARG1];
 
 	# We ignore status 23/24 errors, it happens occassionally...
 	if ( $result == 23 or $result == 24 ) {
@@ -359,7 +360,7 @@ sub _rsync_status_result : State {
 }
 
 sub _rsync_err_result : State {
-	my( $ref, $result ) = @_[ARG0, ARG1];
+	my $result = $_[ARG1];
 
 	warn "Got rsync STDERR:";
 	warn $_ for @$result;
@@ -372,7 +373,7 @@ sub _rsync_err_result : State {
 }
 
 sub _rsync_out_result : State {
-	my( $ref, $result ) = @_[ARG0, ARG1];
+	my $result = $_[ARG1];
 
 	# We're done with the rsync subprocess, shut it down!
 	$_[KERNEL]->post( $_[HEAP]->{'RSYNC'}->session_id, 'shutdown' );
